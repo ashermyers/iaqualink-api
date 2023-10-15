@@ -97,6 +97,28 @@ class AquaLinkAPI {
         }
     }
 
+    async togglePoolLight(device, actionIds) {
+        try {
+            const response = await fetch(`https://prm.iaqualink.net/v2/webtouch/command`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `${this.idToken}`,
+                },
+                body: JSON.stringify({
+                    dt: Date.now(),
+                    command: "23",
+                    actionID: actionIds.actionIdMasterId
+                })
+            });
+            await this.handleFetchErrors(response);
+            return response.status === 200;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+
     async getActionIds(initialActionId) {
         try {
             const response = await fetch(`https://prm.iaqualink.net/v2/webtouch/init?actionID=${initialActionId}`, {
@@ -113,7 +135,7 @@ class AquaLinkAPI {
         }
     }
 
-    async getDeviceStats(device, actionIds) {
+    async getDeviceStats(device) {
         try {
             const response = await fetch(`https://p-api.iaqualink.net/v1/mobile/session.json`, {
                 headers: {
@@ -139,15 +161,14 @@ class AquaLinkAPI {
 const app = express();
 const aquaLinkAPI = new AquaLinkAPI();
 
-app.get(`/:secret`, async (req, res) => {
+app.get(`/:secret/getTemperatures`, async (req, res) => {
     if (req.params.secret !== process.env.SECRET) {
         res.status(403).json({ error: "Forbidden" });
         return;
     }
     try {
-        const device = await aquaLinkAPI.getDeviceData("Pool");
-        const actionIds = await aquaLinkAPI.getActionIds("AG5NJr3X2l8gl");
-        const deviceStats = await aquaLinkAPI.getDeviceStats(device, actionIds);
+        const device = await aquaLinkAPI.getDeviceData(process.env.DEVICE);
+        const deviceStats = await aquaLinkAPI.getDeviceStats(device);
 
         const list = deviceStats.home_screen.map(hsItem => {
             const name = Object.keys(hsItem)[0];
@@ -169,15 +190,31 @@ app.get(`/:secret`, async (req, res) => {
     }
 });
 
-app.get("/:secret/toggle", async (req, res) => {
+app.get("/:secret/toggleFilterPump", async (req, res) => {
     if (req.params.secret !== process.env.SECRET) {
         res.status(403).json({ error: "Forbidden" });
         return;
     }
     try {
-        const device = await aquaLinkAPI.getDeviceData("Pool");
-        const actionIds = await aquaLinkAPI.getActionIds("AG5NJr3X2l8gl");
+        const device = await aquaLinkAPI.getDeviceData(process.env.DEVICE);
+        const actionIds = await aquaLinkAPI.getActionIds(process.env.ACTION);
         await aquaLinkAPI.toggleFilterPump(device, actionIds);
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+app.get("/:secret/togglePoolLight", async (req, res) => {
+    if (req.params.secret !== process.env.SECRET) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+    }
+    try {
+        const device = await aquaLinkAPI.getDeviceData(process.env.DEVICE);
+        const actionIds = await aquaLinkAPI.getActionIds(process.env.ACTION);
+        await aquaLinkAPI.togglePoolLight(device, actionIds);
         res.json({ success: true });
     } catch (error) {
         console.error(error);
