@@ -76,7 +76,7 @@ class AquaLinkAPI {
         }
     }
 
-    async toggleFilterPump(device, actionIds) {
+    async sendCommand(command, actionId) {
         try {
             const response = await fetch(`https://prm.iaqualink.net/v2/webtouch/command`, {
                 method: "POST",
@@ -86,8 +86,8 @@ class AquaLinkAPI {
                 },
                 body: JSON.stringify({
                     dt: Date.now(),
-                    command: "17",
-                    actionID: actionIds.actionIdMasterId
+                    command: command,
+                    actionID: actionId.actionIdMasterId
                 })
             });
             await this.handleFetchErrors(response);
@@ -97,27 +97,61 @@ class AquaLinkAPI {
         }
     }
 
-    async togglePoolLight(device, actionIds) {
+    async toggleFilterPump(actionIds) {
         try {
-            const response = await fetch(`https://prm.iaqualink.net/v2/webtouch/command`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `${this.idToken}`,
-                },
-                body: JSON.stringify({
-                    dt: Date.now(),
-                    command: "23",
-                    actionID: actionIds.actionIdMasterId
-                })
-            });
-            await this.handleFetchErrors(response);
-            return response.status === 200;
+            await this.sendCommand("17", actionIds);
         } catch (error) {
             throw error;
         }
     }
 
+    async toggleSpa(actionIds) {
+        try {
+            await this.sendCommand("18", actionIds);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async togglePoolHeat(actionIds) {
+        try {
+            await this.sendCommand("19", actionIds);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async toggleSpaHeat(actionIds) {
+        try {
+            await this.sendCommand("20", actionIds);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async toggleSheerDescent(actionIds) {
+        try {
+            await this.sendCommand("21", actionIds);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async toggleLowSpeed(actionIds) {
+        try {
+            await this.sendCommand("22", actionIds);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async togglePoolLight(actionIds) {
+        try {
+            await this.sendCommand("23", actionIds);
+        } catch (error) {
+            throw error;
+        }
+    }
 
     async getActionIds(initialActionId) {
         try {
@@ -196,9 +230,8 @@ app.get("/:secret/toggleFilterPump", async (req, res) => {
         return;
     }
     try {
-        const device = await aquaLinkAPI.getDeviceData(process.env.DEVICE);
         const actionIds = await aquaLinkAPI.getActionIds(process.env.ACTION);
-        await aquaLinkAPI.toggleFilterPump(device, actionIds);
+        await aquaLinkAPI.toggleFilterPump(actionIds);
         res.json({ success: true });
     } catch (error) {
         console.error(error);
@@ -212,9 +245,83 @@ app.get("/:secret/togglePoolLight", async (req, res) => {
         return;
     }
     try {
-        const device = await aquaLinkAPI.getDeviceData(process.env.DEVICE);
         const actionIds = await aquaLinkAPI.getActionIds(process.env.ACTION);
-        await aquaLinkAPI.togglePoolLight(device, actionIds);
+        await aquaLinkAPI.togglePoolLight(actionIds);
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+app.get("/:secret/toggleSpa", async (req, res) => {
+    if (req.params.secret !== process.env.SECRET) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+    }
+    try {
+        const actionIds = await aquaLinkAPI.getActionIds(process.env.ACTION);
+        await aquaLinkAPI.toggleSpa(actionIds);
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+app.get("/:secret/togglePoolHeat", async (req, res) => {
+    if (req.params.secret !== process.env.SECRET) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+    }
+    try {
+        const actionIds = await aquaLinkAPI.getActionIds(process.env.ACTION);
+        await aquaLinkAPI.togglePoolHeat(actionIds);
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+app.get("/:secret/toggleSpaHeat", async (req, res) => {
+    if (req.params.secret !== process.env.SECRET) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+    }
+    try {
+        const actionIds = await aquaLinkAPI.getActionIds(process.env.ACTION);
+        await aquaLinkAPI.toggleSpaHeat(actionIds);
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
+
+app.get("/:secret/toggleSheerDescent", async (req, res) => {
+    if (req.params.secret !== process.env.SECRET) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+    }
+    try {
+        const actionIds = await aquaLinkAPI.getActionIds(process.env.ACTION);
+        await aquaLinkAPI.toggleSheerDescent(actionIds);
+        res.json({ success: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+})
+
+app.get("/:secret/toggleLowSpeed", async (req, res) => {
+    if (req.params.secret !== process.env.SECRET) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+    }
+    try {
+        const actionIds = await aquaLinkAPI.getActionIds(process.env.ACTION);
+        await aquaLinkAPI.toggleLowSpeed(actionIds);
         res.json({ success: true });
     } catch (error) {
         console.error(error);
